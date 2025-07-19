@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 
 # # # # # filtration model # # # # # # #
 # C.Barry 2025 # # # # # # # # # # # # #
