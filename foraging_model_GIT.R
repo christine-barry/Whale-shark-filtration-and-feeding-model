@@ -12,6 +12,7 @@
 # 5. Feeding activity adjustment 
 # 6. Intake rates
 # 7. Min time calc
+# 8. Plots and data comparisons :) 
 
 # 1. shark mass ###########################################################################################################
 
@@ -46,7 +47,7 @@ B_temp <- calc_smr(m, temp, temp_co, beta) # mass and temp adjusted
 
 # ACG notes # 
 # first part of function 
-B_15 <- mass^beta # mass to the power of SMR scaling exponent = SMR at 15 deg
+B_15 <- m^beta # mass to the power of SMR scaling exponent = SMR at 15 deg
 # second part of function 
 B_temp <- B_15 * temp_co^((temp - 15) / 10) # SMR scaling exponent adjusted scaling temperature coefficient at 27 deg using Q10 model eqn # (temp - temp reference) / 10
 # # # # # 
@@ -101,8 +102,11 @@ Pa_pass_max <- A_s / (A_s - A_f + I_pass_max)
 Pa_pass_mean <- A_s / (A_s - A_f + I_pass_mean)
 Pa_act <- A_s / (I_act + A_s - A_f)
 
+dat <- data.frame(tl, Pa_tot_min, Pa_tot_mean, Pa_tot_max, I_tot_min, I_tot_mean, I_tot_max, Pa_pass_max, Pa_pass_mean, Pa_pass_min, Pa_act)
 
-# plots ######################################################################################################################
+# model complete :) ###########################################################################################################
+
+# 8. plots and summarise ######################################################################################################
 library(ggplot2)
 
 # total feeding data 
@@ -119,7 +123,7 @@ passive_ribbon <- data.frame(
   ymax = dat$Pa_pass_max
 )
 
-# Long format 
+# reshape data  
 prey_line_data <- data.frame(
   tl = rep(dat$tl, 3),
   prop = c(dat$Pa_tot_mean, dat$Pa_pass_mean, dat$Pa_act),
@@ -159,6 +163,7 @@ p <- ggplot() +
     legend.text = element_text(size = 14, colour = "black"),
     legend.title = element_blank()
   )
+p
 
 # zoomed in y axis plot 
 p2 <- ggplot() +
@@ -174,9 +179,9 @@ p2 <- ggplot() +
   )) +
   scale_y_continuous(
     name = "Proportion of foraging time required",
-    breaks = seq(0, 0.1, by = 0.01)
+    breaks = seq(0, 0.2, by = 0.01)
   ) +
-  coord_cartesian(ylim = c(0, 0.1)
+  coord_cartesian(ylim = c(0, 0.2)
   ) +
   scale_x_continuous(
     name = "Total length (m)",
@@ -194,17 +199,73 @@ p2 <- ggplot() +
     legend.text = element_text(size = 14, colour = "black"),
     legend.title = element_blank()
 )
+p2
 
 #setwd("C:/Users/chris/OneDrive - Murdoch University/CH2 MACHINE LEARNING/results") #setwd
 #ggsave("foragingtime_all.png", plot = p, dpi = 300, width = 12, height = 9)  # Width and height are in inches
-#write.csv(dat, "prop_time.csv")
+
 
 # compare to foraging efforts ##############################################################################################
+df <- read.csv("foraging_efforts.csv")[,-1]
 
+# Figure 3a  # 
 
+# jitter total length of sharks 
+set.seed(42)
+df$jit_tl <- jitter(df$dep_tl, amount = 0.1)
 
-# Figure 3 a 
+# plot 
+Figure3a <- ggplot(df, aes(x = jit_tl, y = prop_feeding)) +
+  geom_point(shape = 17, colour = "#E76F5AFF", size = 4) +
+  scale_x_continuous(
+    name = "Shark total length (m)",
+    breaks = seq(min(df$dep_tl), max(df$dep_tl), by = 0.5)
+  ) +
+  scale_y_continuous(
+    name = "Proportion of time feeding",
+    limits = c(0, max(df$prop_feeding))
+  ) +
+  theme_classic(base_size = 14) +
+  theme(
+    axis.line = element_line(colour = "black", size = 1),
+    axis.title = element_text(size = 14, colour = "black"),
+    axis.text = element_text(size = 14, colour = "black")
+)
+Figure3a
 
+# Figure 3 b #
 
+# add foraging model results (df) to observed behaviours (dat)
+df$dep_pa_act <- dat$Pa_act[match(df$dep_tl, dat$tl)] # proportion of active feeding required to meet net 0 
+df$dep_pa_pass_mean <- dat$Pa_pass_mean[match(df$dep_tl, dat$tl)] # proportion of slow feeding (mean prey) required to meet net 0 
+df$relative_excess <- (df$prop_act_feed / df$dep_pa_act) + (df$prop_slow_feed / df$dep_pa_pass_mean) - 1 # calculate relative excess foraging # subtract by 1 because 1 = 100%
 
-# Figure 3 b 
+# by shark total length 
+length_sum <- aggregate(relative_excess ~ dep_tl, data = df,FUN = function(x) c(mean = mean(x), sd = sd(x), n = length(x)))
+length_sum_stats <- data.frame(
+  total_length_m = length_sum$dep_tl, # length
+  mean_excess = length_sum$relative_excess[, "mean"], # mean 
+  sd_excess = length_sum$relative_excess[, "sd"], # standard dev
+  n = length_sum$relative_excess[, "n"] # no shakrs 
+)
+length_sum_stats$se_excess <- length_sum_stats$sd_excess / sqrt(length_sum_stats$n) # add standard error 
+plot_data <- subset(length_sum_stats, n > 1) # remove samples of 1 
+
+# plot 
+Figure_3b <- ggplot(plot_data, aes(x = total_length_m, y = mean_excess)) +
+  geom_ribbon(aes(ymin = mean_excess - se_excess,
+                  ymax = mean_excess + se_excess,
+                  group = 1),
+              fill =  "#E76F5AFF", alpha = 0.2) +
+  geom_line(colour =  "#E76F5AFF", size = 1.5) +
+  geom_point(size = 4, colour =  "#E76F5AFF") +
+  geom_hline(yintercept = 0, linetype = "dashed", colour = "#0D0887FF", linewidth = 1.5) +  # <-- added line
+  labs(x = "Shark total length (m)",
+       y = "Feeding duration beyond required (%)",
+       title = "") +
+  theme_classic(base_size = 14) +
+  theme(
+    axis.text = element_text(colour = "black"),
+    axis.line = element_line(size = 1.2, colour = "black")
+)
+Figure_3b
