@@ -16,12 +16,12 @@ This foraging model is linked to an unpublished research paper on whale shark be
 6. Intake rates\
 7. Min time calculations\
 \
-**Code to generate **plots** and compare the findings to rates of whale shark feeding is available in the matching R code: \
+**Code to generate **plots** and compare the findings to rates of whale shark feeding is available in the matching R code:\
 [feeding_model_GIT.R](https://github.com/christine-barry/Whale-shark-filtration-and-feeding-model/blob/main/foraging_model_GIT.R)
 
 Let's begin :)
 
-## 1. calculate shark mass 
+## 1. calculate shark mass
 
 Use equation from Hsu et. al 2012 to estimate shark mass from shark total lengths
 
@@ -33,7 +33,7 @@ M <- m * 1000 # convert to g
 
 ```
 
-## 2. set model constants 
+## 2. set model constants
 
 ```{r}
 
@@ -66,7 +66,7 @@ B_temp <- calc_smr(m, temp, temp_co, beta) # mass and temp adjusted
 
 ```
 
-## 4. routine metabolic rate of all swimming 
+## 4. routine metabolic rate of all swimming
 
 ```{r}
 
@@ -77,7 +77,7 @@ A_s <- A_swimming * cal_conv / 3600 / 1000  # Convert to MO2/h/mg to J/s/kg
 
 ```
 
-## 5. Activity adjusted rate of feeding 
+## 5. Activity adjusted rate of feeding
 
 ```{r}
 
@@ -129,7 +129,7 @@ I_act <- calc_intake_rate(kg_act, m, joules_per_kg, assim_eff) # act
 
 ```
 
-## 7. minimum time calculations 
+## 7. minimum time calculations
 
 ```{r}
 
@@ -163,6 +163,6 @@ Reading the table 'dat':
 
 -   Pa_act: the proportion of time a shark of each size would be required to feeding using active feeding behaviours only.
 
-## Model complete :) 
+## Model complete :)
 
 \

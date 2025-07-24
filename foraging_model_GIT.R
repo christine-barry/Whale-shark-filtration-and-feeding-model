@@ -1,9 +1,6 @@
 # # # # # Model for minimum foraging requirements # # # # # 
 # # # # # # # # # # C.Barry et al 2025/6 # # # # # # # # # # 
 
-# A routine (active), B standard (not doing anything but still alive somehow)
-# B / I + B - A # old eqn
-# (A * swimming_activity + B ) / I + ((A * feeding_activity + B) - (A * swimming_activity + B)) # whale shark 
 
 # 1. Calc shark mass 
 # 2. Set constants
